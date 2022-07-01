@@ -31,13 +31,13 @@ initializeDbAndServer();
 app.post("/register", async (request, response) => {
   const { username, name, password, gender, location } = request.body;
 
-  const hashedPassword = await bcrypt.hash(request.body.password, 5);
+  const hashedPassword = await bcrypt.hash(request.body.password, 10);
   const userQuery = `
     SELECT *
     FROM
     user
     WHERE
-    username = ${username};`;
+    username = '${username}';`;
 
   const dbResponse = await db.get(userQuery);
 
@@ -67,7 +67,7 @@ app.post("/login", async (request, response) => {
     FROM
     user
     WHERE
-    username = ${username};`;
+    username = '${username}';`;
 
   const dbResponse = await db.get(userQuery);
 
@@ -89,15 +89,12 @@ app.post("/login", async (request, response) => {
 app.put("/change-password", async (request, response) => {
   const { username, oldPassword, newPassword } = request.body;
   const selectUserQuery = `SELECT * FROM user WHERE username = '${username}';`;
-  const databaseUser = await database.get(selectUserQuery);
+  const databaseUser = await db.get(selectUserQuery);
   if (databaseUser === undefined) {
     response.status(400);
     response.send("Invalid user");
   } else {
-    const isPasswordMatched = await bcrypt.compare(
-      oldPassword,
-      databaseUser.password
-    );
+    const isPasswordMatched = await bcrypt.compare(oldPassword, db.password);
     if (isPasswordMatched === true) {
       if (validatePassword(newPassword)) {
         const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -109,7 +106,7 @@ app.put("/change-password", async (request, response) => {
           WHERE
             username = '${username}';`;
 
-        const user = await database.run(updatePasswordQuery);
+        const user = await db.run(updatePasswordQuery);
 
         response.send("Password updated");
       } else {
